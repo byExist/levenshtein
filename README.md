@@ -73,7 +73,10 @@ The levenshtein package lets you flexibly calculate edit distances between strin
 ### Constructors
 
 - `New(options ...Option) Levenshtein`  
-  Creates a new Levenshtein instance.
+
+### Methods
+
+- `Distance(a, b string) float64`
 
 ### Options
 

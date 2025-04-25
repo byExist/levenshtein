@@ -4,6 +4,7 @@ package levenshtein
 import (
 	"fmt"
 	"math"
+	"slices"
 )
 
 // InsertCost defines the cost function for inserting a rune.
@@ -174,6 +175,96 @@ func ComposeReplaceCost(strategy ComposeStrategy, funcs ...ReplaceCost) (Replace
 			panic("unknown strategy")
 		}
 		return result
+	}, nil
+}
+
+// WeightedInsert wraps an InsertCost function with a weight.
+type WeightedInsert struct {
+	Func   InsertCost
+	Weight float64
+}
+
+// WeightedDelete wraps a DeleteCost function with a weight.
+type WeightedDelete struct {
+	Func   DeleteCost
+	Weight float64
+}
+
+// WeightedReplace wraps a ReplaceCost function with a weight.
+type WeightedReplace struct {
+	Func   ReplaceCost
+	Weight float64
+}
+
+// ComposeWeightedInsertCost combines multiple weighted InsertCost functions.
+func ComposeWeightedInsertCost(funcs []WeightedInsert) (InsertCost, error) {
+	if len(funcs) == 0 {
+		return nil, fmt.Errorf("no weighted insert cost function provided")
+	}
+	for wf := range slices.Values(funcs) {
+		if wf.Weight <= 0 {
+			return nil, fmt.Errorf("invalid weight: %f", wf.Weight)
+		}
+	}
+	return func(r rune) float64 {
+		sum := 0.0
+		totalWeight := 0.0
+		for _, wf := range funcs {
+			sum += wf.Func(r) * wf.Weight
+			totalWeight += wf.Weight
+		}
+		if totalWeight == 0 {
+			return 0
+		}
+		return sum / totalWeight
+	}, nil
+}
+
+// ComposeWeightedDeleteCost combines multiple weighted DeleteCost functions.
+func ComposeWeightedDeleteCost(funcs []WeightedDelete) (DeleteCost, error) {
+	if len(funcs) == 0 {
+		return nil, fmt.Errorf("no weighted delete cost function provided")
+	}
+	for wf := range slices.Values(funcs) {
+		if wf.Weight <= 0 {
+			return nil, fmt.Errorf("invalid weight: %f", wf.Weight)
+		}
+	}
+	return func(r rune) float64 {
+		sum := 0.0
+		totalWeight := 0.0
+		for _, wf := range funcs {
+			sum += wf.Func(r) * wf.Weight
+			totalWeight += wf.Weight
+		}
+		if totalWeight == 0 {
+			return 0
+		}
+		return sum / totalWeight
+	}, nil
+}
+
+// ComposeWeightedReplaceCost combines multiple weighted ReplaceCost functions.
+func ComposeWeightedReplaceCost(funcs []WeightedReplace) (ReplaceCost, error) {
+	if len(funcs) == 0 {
+		return nil, fmt.Errorf("no weighted replace cost function provided")
+	}
+	for wf := range slices.Values(funcs) {
+		if wf.Weight <= 0 {
+			return nil, fmt.Errorf("invalid weight: %f", wf.Weight)
+		}
+	}
+	return func(a, b rune) float64 {
+		sum := 0.0
+		totalWeight := 0.0
+		for _, wf := range funcs {
+			sum += wf.Func(a, b) * wf.Weight
+			totalWeight += wf.Weight
+		}
+		if totalWeight == 0 {
+			return 0
+		}
+		return sum / totalWeight
 	}, nil
 }
 

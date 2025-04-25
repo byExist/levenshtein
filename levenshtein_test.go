@@ -142,6 +142,30 @@ func TestDistanceWithCustomReplaceCost(t *testing.T) {
 	}
 }
 
+func TestComposeWeightedInsertCost(t *testing.T) {
+	w1 := levenshtein.WeightedInsert{Func: func(r rune) float64 { return 2 }, Weight: 0.25}
+	w2 := levenshtein.WeightedInsert{Func: func(r rune) float64 { return 4 }, Weight: 0.75}
+	cost, err := levenshtein.ComposeWeightedInsertCost([]levenshtein.WeightedInsert{w1, w2})
+	assert.NoError(t, err)
+	assert.Equal(t, 3.5, cost('a')) // (0.25*2 + 0.75*4) / 1.0
+}
+
+func TestComposeWeightedDeleteCost(t *testing.T) {
+	w1 := levenshtein.WeightedDelete{Func: func(r rune) float64 { return 3 }, Weight: 0.5}
+	w2 := levenshtein.WeightedDelete{Func: func(r rune) float64 { return 5 }, Weight: 0.5}
+	cost, err := levenshtein.ComposeWeightedDeleteCost([]levenshtein.WeightedDelete{w1, w2})
+	assert.NoError(t, err)
+	assert.Equal(t, 4.0, cost('x')) // (0.5*3 + 0.5*5) / 1.0
+}
+
+func TestComposeWeightedReplaceCost(t *testing.T) {
+	w1 := levenshtein.WeightedReplace{Func: func(a, b rune) float64 { return 2 }, Weight: 0.4}
+	w2 := levenshtein.WeightedReplace{Func: func(a, b rune) float64 { return 6 }, Weight: 0.6}
+	cost, err := levenshtein.ComposeWeightedReplaceCost([]levenshtein.WeightedReplace{w1, w2})
+	assert.NoError(t, err)
+	assert.Equal(t, 4.4, cost('a', 'b')) // (0.4*2 + 0.6*6) / 1.0
+}
+
 func TestDistanceBasicCases(t *testing.T) {
 	l := levenshtein.New()
 	tests := []struct {
@@ -438,9 +462,9 @@ func ExampleWithDeleteCost() {
 func ExampleWithInsertCost() {
 	insertCost := func(r rune) float64 {
 		if r >= '0' && r <= '9' {
-			return 2 // 숫자는 삽입 비용이 2
+			return 2 // if the character is a digit, higher cost
 		}
-		return 1 // 그 외 문자는 기본 1
+		return 1 // if not a digit, lower cost
 	}
 	l := levenshtein.New(levenshtein.WithInsertCost(insertCost))
 	fmt.Println(l.Distance("", "a1b2"))
@@ -454,11 +478,52 @@ func ExampleWithReplaceCost() {
 			return 0
 		}
 		if a == '0' && b == 'O' || a == 'O' && b == '0' {
-			return 0.5 // 유사한 문자는 낮은 비용
+			return 0.5 // visually similar characters have reduced cost
 		}
 		return 1
 	}
 	l := levenshtein.New(levenshtein.WithReplaceCost(replaceCost))
 	fmt.Println(l.Distance("O0", "00"))
 	// Output: 0.5
+}
+
+// ExampleComposeWeightedInsertCost demonstrates combining multiple InsertCost functions with weights.
+func ExampleComposeWeightedInsertCost() {
+	w1 := levenshtein.WeightedInsert{Func: func(r rune) float64 { return 1 }, Weight: 0.5}
+	w2 := levenshtein.WeightedInsert{Func: func(r rune) float64 { return 3 }, Weight: 0.5}
+	insert, _ := levenshtein.ComposeWeightedInsertCost([]levenshtein.WeightedInsert{w1, w2})
+	l := levenshtein.New(levenshtein.WithInsertCost(insert))
+	fmt.Println(insert('x'))
+	fmt.Println(l.Distance("", "abc"))
+	// Output:
+	// 2
+	// 6
+}
+
+// ExampleComposeWeightedDeleteCost demonstrates combining multiple DeleteCost functions with weights.
+func ExampleComposeWeightedDeleteCost() {
+	w1 := levenshtein.WeightedDelete{Func: func(r rune) float64 { return 2 }, Weight: 0.3}
+	w2 := levenshtein.WeightedDelete{Func: func(r rune) float64 { return 4 }, Weight: 0.7}
+	delete, _ := levenshtein.ComposeWeightedDeleteCost([]levenshtein.WeightedDelete{w1, w2})
+	l := levenshtein.New(levenshtein.WithDeleteCost(delete))
+	fmt.Println(delete('x'))
+	fmt.Println(l.Distance("abc", ""))
+	// Output:
+	// 3.4
+	// 10.2
+}
+
+// ExampleComposeWeightedReplaceCost demonstrates combining multiple ReplaceCost functions with weights.
+func ExampleComposeWeightedReplaceCost() {
+	w1 := levenshtein.WeightedReplace{Func: func(a, b rune) float64 { return 0.5 }, Weight: 0.6}
+	w2 := levenshtein.WeightedReplace{Func: func(a, b rune) float64 { return 0.5 }, Weight: 0.4}
+	replace, _ := levenshtein.ComposeWeightedReplaceCost([]levenshtein.WeightedReplace{w1, w2})
+	l := levenshtein.New(
+		levenshtein.WithReplaceCost(replace),
+	)
+	fmt.Println(replace('a', 'b'))
+	fmt.Println(l.Distance("abc", "xyz"))
+	// Output:
+	// 0.5
+	// 1.5
 }

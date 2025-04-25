@@ -45,7 +45,11 @@ func TestComposeDeleteCostVariousStrategies(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cost, err := levenshtein.ComposeDeleteCost(tt.strategy, f1, f2)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expected, cost('a'))
+			if tt.name == "Avg" {
+				assert.InDelta(t, tt.expected, cost('a'), 1e-9)
+			} else {
+				assert.Equal(t, tt.expected, cost('a'))
+			}
 		})
 	}
 }
@@ -74,7 +78,11 @@ func TestComposeInsertCostVariousStrategies(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cost, err := levenshtein.ComposeInsertCost(tt.strategy, f1, f2)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expected, cost('a'))
+			if tt.name == "Avg" {
+				assert.InDelta(t, tt.expected, cost('a'), 1e-9)
+			} else {
+				assert.Equal(t, tt.expected, cost('a'))
+			}
 		})
 	}
 }
@@ -107,7 +115,11 @@ func TestComposeReplaceCostVariousStrategies(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cost, err := levenshtein.ComposeReplaceCost(tt.strategy, f1, f2)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expected, cost('a', 'b'))
+			if tt.name == "Avg" {
+				assert.InDelta(t, tt.expected, cost('a', 'b'), 1e-9)
+			} else {
+				assert.Equal(t, tt.expected, cost('a', 'b'))
+			}
 		})
 	}
 }
@@ -147,7 +159,7 @@ func TestComposeWeightedInsertCost(t *testing.T) {
 	w2 := levenshtein.WeightedInsert{Func: func(r rune) float64 { return 4 }, Weight: 0.75}
 	cost, err := levenshtein.ComposeWeightedInsertCost([]levenshtein.WeightedInsert{w1, w2})
 	assert.NoError(t, err)
-	assert.Equal(t, 3.5, cost('a')) // (0.25*2 + 0.75*4) / 1.0
+	assert.InDelta(t, 3.5, cost('a'), 1e-9) // (0.25*2 + 0.75*4) / 1.0
 }
 
 func TestComposeWeightedDeleteCost(t *testing.T) {
@@ -155,7 +167,7 @@ func TestComposeWeightedDeleteCost(t *testing.T) {
 	w2 := levenshtein.WeightedDelete{Func: func(r rune) float64 { return 5 }, Weight: 0.5}
 	cost, err := levenshtein.ComposeWeightedDeleteCost([]levenshtein.WeightedDelete{w1, w2})
 	assert.NoError(t, err)
-	assert.Equal(t, 4.0, cost('x')) // (0.5*3 + 0.5*5) / 1.0
+	assert.InDelta(t, 4.0, cost('x'), 1e-9) // (0.5*3 + 0.5*5) / 1.0
 }
 
 func TestComposeWeightedReplaceCost(t *testing.T) {
@@ -163,7 +175,7 @@ func TestComposeWeightedReplaceCost(t *testing.T) {
 	w2 := levenshtein.WeightedReplace{Func: func(a, b rune) float64 { return 6 }, Weight: 0.6}
 	cost, err := levenshtein.ComposeWeightedReplaceCost([]levenshtein.WeightedReplace{w1, w2})
 	assert.NoError(t, err)
-	assert.Equal(t, 4.4, cost('a', 'b')) // (0.4*2 + 0.6*6) / 1.0
+	assert.InDelta(t, 4.4, cost('a', 'b'), 1e-9) // (0.4*2 + 0.6*6) / 1.0
 }
 
 func TestDistanceBasicCases(t *testing.T) {

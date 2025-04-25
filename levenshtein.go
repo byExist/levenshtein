@@ -213,27 +213,23 @@ func (lev *levenshtein) Distance(a, b string) float64 {
 
 	if lenA == 0 {
 		sum := 0.0
-		for i := 0; i < lenB; i++ {
-			sum += lev.insertCost(runesB[i])
+		for _, r := range runesB {
+			sum += lev.insertCost(r)
 		}
 		return sum
 	}
 	if lenB == 0 {
 		sum := 0.0
-		for i := 0; i < lenA; i++ {
-			sum += lev.deleteCost(runesA[i])
+		for _, r := range runesA {
+			sum += lev.deleteCost(r)
 		}
 		return sum
 	}
 
 	dpRow := make([]float64, lenB+1)
-
-	for j := 0; j <= lenB; j++ {
-		if j == 0 {
-			dpRow[j] = 0
-		} else {
-			dpRow[j] = dpRow[j-1] + lev.insertCost(runesB[j-1])
-		}
+	dpRow[0] = 0
+	for j, r := range runesB {
+		dpRow[j+1] = dpRow[j] + lev.insertCost(r)
 	}
 
 	for i := 1; i <= lenA; i++ {

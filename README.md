@@ -84,11 +84,9 @@ The levenshtein package lets you flexibly calculate edit distances between strin
 - `WithDeleteCost(DeleteCost) Option`  
 - `WithReplaceCost(ReplaceCost) Option`  
 
-### Composition
-
-- `ComposeInsertCost(strategy, funcs...)`  
-- `ComposeDeleteCost(strategy, funcs...)`  
-- `ComposeReplaceCost(strategy, funcs...)`  
+- `ComposeInsertCost(strategy ComposeStrategy, funcs ...InsertCost) (InsertCost, error)`  
+- `ComposeDeleteCost(strategy ComposeStrategy, funcs ...DeleteCost) (DeleteCost, error)`  
+- `ComposeReplaceCost(strategy ComposeStrategy, funcs ...ReplaceCost) (ReplaceCost, error)`  
 - `ComposeWeightedInsertCost([]WeightedInsert) (InsertCost, error)`  
 - `ComposeWeightedDeleteCost([]WeightedDelete) (DeleteCost, error)`  
 - `ComposeWeightedReplaceCost([]WeightedReplace) (ReplaceCost, error)`  

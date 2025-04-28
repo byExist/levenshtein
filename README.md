@@ -2,7 +2,7 @@
 
 # levenshtein [![GoDoc](https://pkg.go.dev/badge/github.com/byExist/levenshtein.svg)](https://pkg.go.dev/github.com/byExist/levenshtein) [![Go Report Card](https://goreportcard.com/badge/github.com/byExist/levenshtein)](https://goreportcard.com/report/github.com/byExist/levenshtein)
 
-## What is levenshtein?
+## What is "levenshtein"?
 
 levenshtein is a Go package implementing the Levenshtein distance algorithm with customizable cost functions for insertion, deletion, and substitution operations. It’s lightweight and flexible, suitable for practical string distance computations.
 
